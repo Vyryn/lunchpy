@@ -60,7 +60,26 @@ class Eat:
         """
         resp = self._query('categories')
         res = {item['name']: item for item in resp['categories']}
-        for item, properties in res:
-            for key, value in properties:
+        for item, properties in res.items():
+            for key, value in properties.items():
                 properties.__dict__[key] = value
+        return res
+
+    def transactions(self, start: str, end: str) -> dict:
+        """Use this endpoint to retrieve all transactions between a date range.
+        If no query parameters are set, this endpoint will return transactions for the
+        current calendar month. Format for start and end are YYYY-MM-DD strings.
+        Returns:
+            transactions (list): list of Transaction dict/objects.
+        """
+        extra_headers = {}
+        if start:
+            extra_headers['start_date'] = start
+        if end:
+            extra_headers['end_date'] = end
+        resp = self._query('transactions', extra_headers=extra_headers)
+        res = resp['transactions']
+        for tx in res:
+            for key, value in tx:
+                tx.__dict__[key] = value
         return res

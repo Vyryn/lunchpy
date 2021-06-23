@@ -1,8 +1,7 @@
 LunchPy
 ===========
 [![Status](https://img.shields.io/badge/status-alpha-red)](https://img.shields.io/badge/status-alpha-red)
-
-===========
+[![API Coverage](https://img.shields.io/badge/endpoints_covered-2/18-red)](https://img.shields.io/badge/endpoints_covered-2/18-red)
 
 ## About
 
@@ -43,22 +42,25 @@ print(transactions[6]['amount'])
 * [Vyryn](https://github.com/vyryn)
 
 ## TODO
-- Expand coverage one endpoint at a time. Current coverage: 0/18
-- GET /categories
-- POST /categories
-- GET /tags
-- GET /transactions
-- GET /transactions/:transaction_id
-- POST /transactions
-- PUT /transactions/:transaction_id
-- POST /transactions/group
-- DELETE transactions/group/:transaction_id
-- GET /recurring_expenses
-- GET /budgets
-- PUT /budgets
-- DELETE /budgets
-- GET /assets
-- PUT /assets/:id
-- GET /plaid_accounts
-- GET /crypto
-- PUT /crypto/manual/:id
+- Expand coverage one endpoint at a time.
+    - POST /categories
+    - GET /tags
+    - GET /transactions/:transaction_id
+    - POST /transactions
+    - PUT /transactions/:transaction_id
+    - POST /transactions/group
+    - DELETE transactions/group/:transaction_id
+    - GET /recurring_expenses
+    - GET /budgets
+    - PUT /budgets
+    - DELETE /budgets
+    - GET /assets
+    - PUT /assets/:id
+    - GET /plaid_accounts
+    - GET /crypto
+    - PUT /crypto/manual/:id
+
+- Add tests for implemented endpoints
+    - GET /categories
+    - GET /transactions
+    
