@@ -17,7 +17,10 @@ class LunchPyResultObject(UserDict):
                                  f'has no attribute {name}') from None
 
     def __repr__(self):
-        name = self.get('name', None) or self.get('original_name', None) or super().__repr__()
+        name = self.get('name', None) or \
+               self.get('original_name', None) or \
+               self.get('category_name', None) or \
+               super().__repr__()
         return f'<{name}>'
 
 
@@ -92,12 +95,16 @@ class Eat:
             pass
         return data
 
-    def categories(self) -> [LunchPyResultObject]:
+    def categories(self, **kwargs) -> [LunchPyResultObject]:
         """Use this endpoint to get a list of all categories associated with the user's account.
+        Args:
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
         Returns:
             categories ([LunchPyResultObject]): Requested categories
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
         """
-        resp = self._query('categories')
+        resp = self._query('categories', params=kwargs)
         return self._objectify(resp, 'categories')
 
     def transactions(self, **kwargs) -> [LunchPyResultObject]:
@@ -108,28 +115,38 @@ class Eat:
             kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
         Returns:
             transactions (list): list of Transaction dict/objects.
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
         """
         resp = self._query('transactions', params=kwargs)
         return self._objectify(resp, 'transactions')
 
-    def transaction(self, tid: int, debit_as_negative: bool = False) -> LunchPyResultObject:
+    def transaction(self, tid: int, debit_as_negative: bool = False, **kwargs) -> LunchPyResultObject:
         """Use this endpoint to retrieve details about a specific transaction by ID.
         Args:
             tid (int): The transaction id you're looking for
             debit_as_negative (bool): Pass in true if you’d like expenses to be returned as negative
              amounts and credits as positive amounts. Defaults to false.
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
         Returns:
             transaction (LunchPyResultObject): The requested transaction
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
         """
-        resp = self._query(f'transactions/{tid}', params={'debit_as_negative': debit_as_negative})
+        resp = self._query(f'transactions/{tid}', params={'debit_as_negative': debit_as_negative} | kwargs)
         return LunchPyResultObject(resp)
 
-    def tags(self) -> [LunchPyResultObject]:
+    def tags(self, **kwargs) -> [LunchPyResultObject]:
         """Use this endpoint to get a list of all tags associated with the user's account.
+        Args:
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
         Returns:
             tags ([LunchPyResultObject]): Requested tags
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
+
         """
-        resp = self._query('tags')
+        resp = self._query('tags', params=kwargs)
         return self._objectify(resp)
 
     def recurring_expenses(self, **kwargs) -> [LunchPyResultObject]:
@@ -146,6 +163,61 @@ class Eat:
             kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
         Returns:
             recurring ([LunchPyResultObject]): Requested recurring expenses
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
         """
         resp = self._query('recurring_expenses', params=kwargs)
         return self._objectify(resp)
+
+    def budgets(self, **kwargs) -> [LunchPyResultObject]:
+        """Use this endpoint to get full details on the budgets for all categories between a certain time period.
+         The budgeted and spending amounts will be an aggregate across this time period.
+        Args:
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
+        Returns:
+            budgets ([LunchPyResultObject]): Requested budgets
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
+        """
+        resp = self._query('budgets', params=kwargs)
+        return self._objectify(resp)
+
+    def assets(self, **kwargs) -> [LunchPyResultObject]:
+        """Use this endpoint to get a list of all manually-managed assets associated with the user's account.
+        Args:
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
+        Returns:
+            assets ([LunchPyResultObject]): Requested assets
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
+        """
+        resp = self._query('assets', params=kwargs)
+        return self._objectify(resp, 'assets')
+
+    def plaid_accounts(self, **kwargs) -> [LunchPyResultObject]:
+        """Use this endpoint to get a list of all synced Plaid accounts associated with the user's account.
+        Plaid Accounts are individual bank accounts that you have linked to Lunch Money via Plaid. You may
+        link one bank but one bank might contain 4 accounts. Each of these accounts is a Plaid Account.
+        Args:
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
+        Returns:
+            accounts ([LunchPyResultObject]): Requested accounts
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
+        """
+        resp = self._query('plaid_accounts', params=kwargs)
+        return self._objectify(resp, 'plaid_accounts')
+
+    def crypto(self, **kwargs) -> [LunchPyResultObject]:
+        """
+        Use this endpoint to get a list of all cryptocurrency assets associated with the user's account.
+         Both crypto balances from synced and manual accounts will be returned.
+        Args:
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
+        Returns:
+            cryptos ([LunchPyResultObject]): Requested crypto assets
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
+        """
+        resp = self._query('crypto', params=kwargs)
+        return self._objectify(resp, 'crypto')

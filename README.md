@@ -1,7 +1,7 @@
 LunchPy
 ===========
 [![Status](https://img.shields.io/badge/status-alpha-red)](https://img.shields.io/badge/status-alpha-red)
-[![API Coverage](https://img.shields.io/badge/endpoints_covered-5/18-orange)](https://img.shields.io/badge/endpoints_covered-5/18-orange)
+[![API Coverage](https://img.shields.io/badge/endpoints_covered-9/18-yellow)](https://img.shields.io/badge/endpoints_covered-9/18-yellow)
 
 ## About
 
@@ -48,13 +48,9 @@ print(transactions[6]['amount'])
     - PUT /transactions/:transaction_id
     - POST /transactions/group
     - DELETE transactions/group/:transaction_id
-    - GET /budgets
     - PUT /budgets
     - DELETE /budgets
-    - GET /assets
     - PUT /assets/:id
-    - GET /plaid_accounts
-    - GET /crypto
     - PUT /crypto/manual/:id
 
 - Add tests for implemented endpoints
@@ -63,5 +59,7 @@ print(transactions[6]['amount'])
     - GET /transactions/:transaction_id
     - GET /tags
     - GET /recurring_expenses
-
-    
+    - GET /budgets
+    - GET /assets
+    - GET /plaid_accounts
+    - GET /crypto
