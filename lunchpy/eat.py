@@ -1,3 +1,4 @@
+import datetime
 import os
 
 from collections import UserDict
@@ -70,7 +71,10 @@ class Eat:
                 res = res[ident]
             except KeyError:
                 raise RequestError(str(res))
-        return [LunchPyResultObject(i) for i in res]
+        try:
+            return [LunchPyResultObject(i) for i in res]
+        except ValueError:
+            raise RequestError(str(res)) from None
 
     def _query(self, endpoint: str, extra_headers: dict = None, params: dict = None) -> dict:
         """Internal helper function for building a query.
@@ -169,17 +173,23 @@ class Eat:
         resp = self._query('recurring_expenses', params=kwargs)
         return self._objectify(resp)
 
-    def budgets(self, **kwargs) -> [LunchPyResultObject]:
+    def budgets(self, start_date: str = None, end_date: str = None, **kwargs) -> [LunchPyResultObject]:
         """Use this endpoint to get full details on the budgets for all categories between a certain time period.
          The budgeted and spending amounts will be an aggregate across this time period.
         Args:
+            start_date (str): The start date for this query in the form YYYY-MM-DD
+            end_date (str): The end date for this query in the form YYYY-MM-DD
             kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
         Returns:
             budgets ([LunchPyResultObject]): Requested budgets
         Raises:
             RequestError: An error direct from Lunch Money. It will contain details.
         """
-        resp = self._query('budgets', params=kwargs)
+        if not start_date:
+            start_date = str(datetime.date.today()-datetime.timedelta(days=30))
+        if not end_date:
+            end_date = str(datetime.date.today())
+        resp = self._query('budgets', params={'start_date': start_date, 'end_date': end_date} | kwargs)
         return self._objectify(resp)
 
     def assets(self, **kwargs) -> [LunchPyResultObject]:
