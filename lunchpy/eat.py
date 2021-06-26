@@ -2,6 +2,7 @@ import datetime
 import os
 
 from collections import UserDict
+from typing import Union
 
 import requests
 
@@ -76,7 +77,8 @@ class Eat:
         except ValueError:
             raise RequestError(str(res)) from None
 
-    def _query(self, endpoint: str, method: str = 'GET', extra_headers: dict = None, params: dict = None) -> dict:
+    def _query(self, endpoint: str, method: str = 'GET', extra_headers: dict = None, params: dict = None)\
+            -> Union[dict, int]:
         """Internal helper function for building a query.
         Args:
             endpoint (str): Endpoint to query
@@ -85,12 +87,11 @@ class Eat:
         Returns:
             data (dict): Request data
         Raises:
-            RequestError: Likely, the requested API endpoint does not exist
+            RequestError: Either the endpoint does not exist or LunchMoney responded with an error.
         """
         headers = dict(self.headers)
         if extra_headers:
             headers |= extra_headers
-        # resp = requests.get(self.endpoint + endpoint, headers=headers, params=params)
         resp = requests.request(method=method, url=self.endpoint + endpoint, headers=headers, params=params)
         data = resp.json()
         try:
@@ -242,6 +243,65 @@ class Eat:
         """
         resp = self._query(f'transactions/group/{tx_id}', method='DELETE')
         try:
-            return resp['transactions']
+            return [int(i) for i in resp['transactions']]
         except KeyError:
             raise AttributeError(resp['error'])
+
+    def del_budget(self, category_id: int, start_date: str = None) -> bool:
+        """Use this endpoint to unset an existing budget for a particular category in a particular month.
+        Args:
+            start_date (str): The start date for the budget period in the form 'YYYY-MM'
+            category_id (int): The uid for the category you're deleting the budget of
+        Returns:
+            success (bool): Whether the category was successfully deleted
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
+            """
+        params = {'start_date': f'{start_date}-01',
+                  'category_id': str(category_id)}
+        data = self._query('budgets', method='DELETE', params=params)
+        return bool(data)
+
+    def create_category(self, name: str, **kwargs):
+        """Use this endpoint to create a single category.
+        Args:
+            name (str): Name of category. Must be 1-40 characters.
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
+        Returns:
+            Result (int): The category id
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
+        """
+        data = self._query('categories', method='POST', params={'name': name} | kwargs)
+        return int(data['category_id'])
+
+    def create_transactions(self, transactions: [dict], **kwargs) -> [int]:
+        """Use this endpoint to insert many transactions at once.
+        Args:
+            transactions ([dict]): List of transactions. Each transaction is a dict and must have date and amount
+             parameters. Also accepts all optional parameters from the API.
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
+        Returns:
+            Result ([int]): The category ids of successfully inserted transactions
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
+        """
+        data = self._query('transactions', method='POST', params={'transactions': transactions} | kwargs)
+        return [int(i) for i in data['ids']]
+
+    def create_transaction_group(self, date: str, payee: str, transactions: [int], **kwargs):
+        """Use this endpoint to create a transaction group of two or more transactions.
+        Returns the ID of the newly created transaction group
+        Args:
+            date (str): Date for the grouped transaction
+            payee (str): Payee name for the grouped transaction
+            transactions ([int]): List of two or more transaction ids to be part of the group
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
+        Returns:
+            Result (int): The id of the newly created transaction group
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
+        """
+        params = {'date': date, 'payee': payee, 'transactions': transactions} | kwargs
+        data = self._query('transactions/group', method='POST', params=params)
+        return int(data)

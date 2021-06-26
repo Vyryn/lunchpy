@@ -1,7 +1,7 @@
 LunchPy
 ===========
 [![Status](https://img.shields.io/badge/status-alpha-red)](https://img.shields.io/badge/status-alpha-red)
-[![API Coverage](https://img.shields.io/badge/endpoints_covered-10/18-yellow)](https://img.shields.io/badge/endpoints_covered-10/18-yellow)
+[![API Coverage](https://img.shields.io/badge/endpoints_covered-14/18-yellow)](https://img.shields.io/badge/endpoints_covered-14/18-yellow)
 
 ## About
 
@@ -43,12 +43,8 @@ print(transactions[6]['amount'])
 
 ## TODO
 - Expand coverage one endpoint at a time.
-    - POST /categories
-    - POST /transactions
     - PUT /transactions/:transaction_id
-    - POST /transactions/group
     - PUT /budgets
-    - DELETE /budgets
     - PUT /assets/:id
     - PUT /crypto/manual/:id
 
@@ -63,3 +59,7 @@ print(transactions[6]['amount'])
     - GET /plaid_accounts
     - GET /crypto
     - DELETE transactions/group/:transaction_id
+    - DELETE /budgets
+    - POST /categories
+    - POST /transactions
+    - POST /transactions/group
