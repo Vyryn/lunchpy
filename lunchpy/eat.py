@@ -76,7 +76,7 @@ class Eat:
         except ValueError:
             raise RequestError(str(res)) from None
 
-    def _query(self, endpoint: str, extra_headers: dict = None, params: dict = None) -> dict:
+    def _query(self, endpoint: str, method: str = 'GET', extra_headers: dict = None, params: dict = None) -> dict:
         """Internal helper function for building a query.
         Args:
             endpoint (str): Endpoint to query
@@ -90,7 +90,8 @@ class Eat:
         headers = dict(self.headers)
         if extra_headers:
             headers |= extra_headers
-        resp = requests.get(self.endpoint + endpoint, headers=headers, params=params)
+        # resp = requests.get(self.endpoint + endpoint, headers=headers, params=params)
+        resp = requests.request(method=method, url=self.endpoint + endpoint, headers=headers, params=params)
         data = resp.json()
         try:
             if data.get('error', None):
@@ -231,3 +232,16 @@ class Eat:
         """
         resp = self._query('crypto', params=kwargs)
         return self._objectify(resp, 'crypto')
+
+    def del_group(self, tx_id: int) -> [int]:
+        """Use this endpoint to delete a transaction group. The transactions within the group will not be removed.
+        Args:
+            tx_id (int): The transaction id of the group to remove
+        Returns:
+            removed ([int]): A list of the transaction ids of individual transactions that were removed
+        """
+        resp = self._query(f'transactions/group/{tx_id}', method='DELETE')
+        try:
+            return resp['transactions']
+        except KeyError:
+            raise AttributeError(resp['error'])
