@@ -1,7 +1,7 @@
 LunchPy
 ===========
 [![Status](https://img.shields.io/badge/status-alpha-red)](https://img.shields.io/badge/status-alpha-red)
-[![API Coverage](https://img.shields.io/badge/endpoints_covered-14/18-yellow)](https://img.shields.io/badge/endpoints_covered-14/18-yellow)
+[![API Coverage](https://img.shields.io/badge/endpoints_covered-14/18-green)](https://img.shields.io/badge/endpoints_covered-14/18-green)
 
 ## About
 

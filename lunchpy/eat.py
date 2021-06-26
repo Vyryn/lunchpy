@@ -305,3 +305,16 @@ class Eat:
         params = {'date': date, 'payee': payee, 'transactions': transactions} | kwargs
         data = self._query('transactions/group', method='POST', params=params)
         return int(data)
+
+    def update_transaction(self, transaction_id: int, **kwargs):
+        """Use this endpoint to update a single transaction. You may also use this to split an existing transaction.
+        Args:
+            transaction_id (int): Updates to transaction matching ID
+
+        :param transaction_id:
+        :type transaction_id:
+        :param kwargs:
+        :type kwargs:
+        :return:
+        :rtype:
+        """
