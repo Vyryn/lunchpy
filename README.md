@@ -1,18 +1,20 @@
 LunchPy
 ===========
-[![Status](https://img.shields.io/badge/status-alpha-red)](https://img.shields.io/badge/status-alpha-red)
-[![API Coverage](https://img.shields.io/badge/endpoints_covered-14/18-green)](https://img.shields.io/badge/endpoints_covered-14/18-green)
+[![Status](https://img.shields.io/badge/status-beta-yellow)](https://img.shields.io/badge/status-beta-yellow)
+[![API Coverage](https://img.shields.io/badge/endpoints_covered-18/18-g)](https://img.shields.io/badge/endpoints_covered-18/18-g)
 
 ## About
 
 LunchPy is a python wrapper for Lunch Money's API. It requires an API key, which can be generated from your 
 Lunch Money account under Settings -> Developers -> Request new Access Token. Note that the API itself
-is in beta. This package should be considered experimental and breaking changes may be pushed without notice. This 
-package does not currently cover the full set of Lunch Money API endpoints.
+is in beta. This package is also in beta; basic structure is complete but breaking changes may still be necessary.
+This package covers the full set of 18 Lunch Money API endpoints as of 6/27/2021. Future endpoints and extensions 
+should be supported automatically; _query can be used to query an endpoint directly, and additional parameters can 
+freely be added to all calls without modification if they become supported by the API in the future.
 
 [API Documentation](https://lunchmoney.dev/#getting-started)
 
-This package is built for Python 3.9.
+This package is for Python 3.9 and uses [Semver 2.0.0](https://semver.org/spec/v2.0.0.html) versioning.
 
 ## Install
 
@@ -27,14 +29,11 @@ Initialize an environment variable LUNCH_MONEY_API_KEY equal to your API key.
 ## Usage
 ```python
 from lunchpy import Eat
-api_key = ''
-api = Eat(api_key)
+
+api = Eat('your_api_key')
 
 for category in api.categories():
-    print(f"You're so organized, you have a {category} category.")
-
-transactions = api.transactions(start='2020-01-01', end='2020-02-01')
-print(transactions[6]['amount'])
+    print(f'You have a category called {category}.')
 ```
 
 ## Contributors
@@ -42,11 +41,6 @@ print(transactions[6]['amount'])
 * [Vyryn](https://github.com/vyryn)
 
 ## TODO
-- Expand coverage one endpoint at a time.
-    - PUT /transactions/:transaction_id
-    - PUT /budgets
-    - PUT /assets/:id
-    - PUT /crypto/manual/:id
 
 - Add tests for implemented endpoints
     - GET /categories
@@ -63,3 +57,7 @@ print(transactions[6]['amount'])
     - POST /categories
     - POST /transactions
     - POST /transactions/group
+    - PUT /transactions/:transaction_id
+    - PUT /budgets
+    - PUT /assets/:id
+    - PUT /crypto/manual/:id

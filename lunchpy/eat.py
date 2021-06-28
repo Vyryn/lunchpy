@@ -1,10 +1,17 @@
 import datetime
 import os
-
-from collections import UserDict
+from decimal import Decimal
 from typing import Union
 
 import requests
+
+from collections import UserDict
+
+
+class TransactionEmptyError(Exception):
+    def __str__(self):
+        return "A transaction object can not be empty. Initialize with at least one parameter outlined in the " \
+               "Lunch Money API."
 
 
 class LunchPyResultObject(UserDict):
@@ -22,7 +29,7 @@ class LunchPyResultObject(UserDict):
         name = self.get('name', None) or \
                self.get('original_name', None) or \
                self.get('category_name', None) or \
-               super().__repr__()
+               type(self).__name__
         return f'<{name}>'
 
 
@@ -41,7 +48,7 @@ class RequestError(Exception):
 
 class NoEnvApiKeyError(Exception):
     def __str__(self):
-        return "LunchPy requires an API key. Either initialize an Eat object with one or set the "\
+        return "LunchPy requires an API key. Either initialize an Eat object with one or set the " \
                "'LUNCH_MONEY_API_KEY' environment variable."
 
 
@@ -65,19 +72,19 @@ class Eat:
                         'Authorization': 'Bearer ' + api_key}
 
     @staticmethod
-    def _objectify(res, ident=None) -> [LunchPyResultObject]:
-        """Turn a list of dicts into a list of LunchPyResultObjects"""
+    def _objectify(res, ident=None, cl=LunchPyResultObject) -> [LunchPyResultObject]:
+        """Turn a list of dicts into a list of LunchPyResultObjects (or whatever class is supplied as cl)"""
         if ident:
             try:
                 res = res[ident]
             except KeyError:
                 raise RequestError(str(res))
         try:
-            return [LunchPyResultObject(i) for i in res]
+            return [cl(i) for i in res]
         except ValueError:
             raise RequestError(str(res)) from None
 
-    def _query(self, endpoint: str, method: str = 'GET', extra_headers: dict = None, params: dict = None)\
+    def _query(self, endpoint: str, method: str = 'GET', extra_headers: dict = None, params: dict = None) \
             -> Union[dict, int]:
         """Internal helper function for building a query.
         Args:
@@ -188,7 +195,7 @@ class Eat:
             RequestError: An error direct from Lunch Money. It will contain details.
         """
         if not start_date:
-            start_date = str(datetime.date.today()-datetime.timedelta(days=30))
+            start_date = str(datetime.date.today() - datetime.timedelta(days=30))
         if not end_date:
             end_date = str(datetime.date.today())
         resp = self._query('budgets', params={'start_date': start_date, 'end_date': end_date} | kwargs)
@@ -247,7 +254,7 @@ class Eat:
         except KeyError:
             raise AttributeError(resp['error'])
 
-    def del_budget(self, category_id: int, start_date: str = None) -> bool:
+    def del_budget(self, category_id: int, start_date: str) -> bool:
         """Use this endpoint to unset an existing budget for a particular category in a particular month.
         Args:
             start_date (str): The start date for the budget period in the form 'YYYY-MM'
@@ -262,7 +269,7 @@ class Eat:
         data = self._query('budgets', method='DELETE', params=params)
         return bool(data)
 
-    def create_category(self, name: str, **kwargs):
+    def create_category(self, name: str, **kwargs) -> int:
         """Use this endpoint to create a single category.
         Args:
             name (str): Name of category. Must be 1-40 characters.
@@ -306,15 +313,83 @@ class Eat:
         data = self._query('transactions/group', method='POST', params=params)
         return int(data)
 
-    def update_transaction(self, transaction_id: int, **kwargs):
+    def update_transaction(self, transaction: dict, tx_id: int = None, split: dict = None, **kwargs) -> (bool, [int]):
         """Use this endpoint to update a single transaction. You may also use this to split an existing transaction.
         Args:
-            transaction_id (int): Updates to transaction matching ID
-
-        :param transaction_id:
-        :type transaction_id:
-        :param kwargs:
-        :type kwargs:
-        :return:
-        :rtype:
+            transaction (dict): A dict containing at least one transaction object parameter from the Lunch
+             Money API documentation. You may pass an 'id' parameter as part of this dict or as a separate
+             parameter, but it is required one way or the other.
+            tx_id (int): The transaction id of the transaction to update. May instead be passed as an 'id' parameter
+            in the transaction dict.
+            split (dict): An optional dict containing the requisite split parameters from the API docs if you wish
+             to split a transaction.
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
+         Returns:
+            Result ((bool, [int])): A tuple which includes the success confirmation and an array of split transaction
+             ids. (if the transaction was not a split, this will be empty)
+         Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
         """
+        if tx_id is None:
+            try:
+                tx_id = transaction['id']
+            except AttributeError:
+                raise RequestError('Id parameter must be passed ot update_transaction either as part of the '
+                                   'transaction dict or as a tx_id parameter.')
+        if split is not None:
+            params = {'transaction': transaction, 'split': split} | kwargs
+        else:
+            params = {'transaction': transaction} | kwargs
+        data = self._query(f'transactions/{tx_id}', method='PUT', params=params)
+        return bool(data['updated']), [int(i) for i in data['split']]
+
+    def upsert_budget(self, category_id: int, amount: Union[int, Decimal], start_date: str, **kwargs)\
+            -> LunchPyResultObject:
+        """Use this endpoint to update an existing budget or insert a new budget for a particular category and date.
+        Note: Lunch Money currently only supports monthly budgets, so your date must always be the start of a month
+         (eg. 2021-04-01)
+        If this is a sub-category, the response will include the updated category group's budget.
+         This is because setting a sub-category may also update the category group's overall budget.
+        Args:
+            start_date (str): The start date for the budget period in the form 'YYYY-MM'
+            category_id (int): Unique identifier for the category
+            amount (Union[int, Decimal]): Amount for budget
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
+        Returns:
+            Result (LunchPyResultObject): The budget reply information as per the Lunch Money API.
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
+        """
+        params = {'start_date': f'{start_date}-01',
+                  'category_id': str(category_id),
+                  'amount': str(amount)} | kwargs
+        data = self._query('budgets', method='PUT', params=params)
+        return LunchPyResultObject(data['category_group'])
+
+    def update_asset(self, asset_id: int, **kwargs) -> LunchPyResultObject:
+        """Use this endpoint to update a single asset.
+        Args:
+            asset_id (int): The id of the asset to update
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
+        Returns:
+            Result (LunchPyResultObject): The budget reply information as per the Lunch Money API.
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
+        """
+        data = self._query(f'assets/{asset_id}', method='PUT', params=kwargs)
+        return LunchPyResultObject(data)
+
+    def update_crypto(self, asset_id: int, **kwargs) -> LunchPyResultObject:
+        """Use this endpoint to update a single manually-managed crypto asset.
+        This does not include assets received from syncing with your wallet/exchange/etc).
+         These are denoted by source: manual from the GET call.
+        Args:
+            asset_id (int): The id of the manual crypto asset to update
+            kwargs (kwargs): A collection of key value pairs. Accepts all parameters the API does.
+        Returns:
+            Result (LunchPyResultObject): The budget reply information as per the Lunch Money API.
+        Raises:
+            RequestError: An error direct from Lunch Money. It will contain details.
+        """
+        data = self._query(f'crypto/{asset_id}', method='PUT', params=kwargs)
+        return LunchPyResultObject(data)
