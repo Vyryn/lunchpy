@@ -1,5 +1,6 @@
 import datetime
 import os
+from json import dumps
 from decimal import Decimal
 from typing import Union
 
@@ -99,7 +100,11 @@ class Eat:
         headers = dict(self.headers)
         if extra_headers:
             headers |= extra_headers
-        resp = requests.request(method=method, url=self.endpoint + endpoint, headers=headers, params=params)
+        params = {str(key): dumps(value) for key, value in params.items()}
+        if method in ['GET', 'DELETE']:
+            resp = requests.request(method=method, url=self.endpoint + endpoint, headers=headers, params=params)
+        else:
+            resp = requests.request(method=method, url=self.endpoint + endpoint, headers=headers, data=dumps(params))
         data = resp.json()
         try:
             if data.get('error', None):
