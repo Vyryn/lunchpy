@@ -10,6 +10,9 @@ setup(
     url=f'https://github.com/{__author__}/{__title__}',
     description='An API wrapper for Lunch Money',
     packages=[__title__],
+    package_data={
+        __title__: ['py.typed']
+    },
     install_requires=[
         'requests~=2.25.1',
     ],
