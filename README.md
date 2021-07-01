@@ -5,7 +5,7 @@ LunchPy
 
 ## About
 
-LunchPy is a python wrapper for Lunch Money's API. It requires an API key, which can be generated from your 
+LunchPy is a python client for Lunch Money's API. It requires an API key, which can be generated from your 
 Lunch Money account under Settings -> Developers -> Request new Access Token. Note that the API itself
 is in beta. This package is also in beta; basic structure is complete but breaking changes may still be necessary.
 This package covers the full set of 18 Lunch Money API endpoints as of 6/27/2021. Future endpoints and extensions 
@@ -24,7 +24,8 @@ This package's only requirement is the requests package.
 
 ## Setting up the API Key
 
-Initialize an environment variable LUNCH_MONEY_API_KEY equal to your API key.
+Initialize an environment variable LUNCH_MONEY_API_KEY equal to your API key. Alternatively, you can pass your API 
+key to an Eat object on declaration. 
 
 ## Usage
 ```python
